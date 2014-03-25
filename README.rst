@@ -14,9 +14,8 @@ Usage:
   parser.update_data()
   ua = UA(parser, user_agent_string)
   print ua.is_robot() # returns empty dictionary if robot is not detected
-  print ua.is_valid_browser() # returns True if browser is detected
+  print ua.get_browser_details() # returns empty dictionary, or browser details
   print ua.get_device_type() # returns dict containing device type fields
-  print ua.get_browser_details()
   print ua.get_os_details()
   # Or alternatively,
   print ua.parse() # returns all parsed fields for the UA string

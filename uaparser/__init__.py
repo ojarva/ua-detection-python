@@ -65,9 +65,9 @@ to check whether the data is available.
 """
 
 import os
-import urllib2
 import re
 import time
+import urllib2
 
 try:
     import cPickle as pickle
@@ -80,7 +80,7 @@ class UA:
     def __init__(self, parser, ua):
         self.parser = parser
         self.ua = ua
-        self.info = False
+        self.browser_version_info = False
         self.browser_id = False
         self.browser_type = False
 
@@ -93,9 +93,10 @@ class UA:
         ret = self.is_robot()
         if ret:
             return ret
-        if not self.is_valid_browser():
-            return {}
-        ret = {}
+        ret = self.get_browser_details()
+        if len(ret.keys()) == 0:
+            return ret
+
         ret.update(self.get_browser_details())
         ret.update(self.get_os_details())
         ret.update(self.get_device_type())
@@ -111,13 +112,18 @@ class UA:
                 parsed_data['type'] = 'Robot'
                 for i, keyname in enumerate(UAParser.UA_INDEX):
                     parsed_data[keyname] = test[i + 1]
+                try:
+                    del parsed_data[""]
+                except KeyError:
+                    pass
                 return parsed_data
         return {}
 
-    def is_valid_browser(self):
+    def get_browser_details(self):
+        """ Returns True if browser is found   """
         # Is the UA valid browser?
         self.browser_id = None
-        self.info = None
+        self.browser_version_info = None
         for index in self.parser.data['browser_reg']['order']:
             test = self.parser.data['browser_reg'][index]
             # .search is remarkably faster than .findall.
@@ -126,10 +132,27 @@ class UA:
             test_rg = test[0].search(self.ua)
             if test_rg:
                 test_rg = test[0].findall(self.ua)
-                self.browser_id = int(test[1]) #Bingo
-                self.info = test_rg[0]
-                return True
-        return False
+                self.browser_id = int(test[1])
+                self.browser_version_info = test_rg[0]
+                break
+
+        if self.browser_id == None:
+            return {}
+
+        self.browser_type = None
+        parsed_data = {}
+        if self.parser.data['browser'].has_key(self.browser_id):
+            for i, keyname in enumerate(UAParser.BROWSER_INDEX):
+                parsed_data[keyname] = self.parser.data["browser"][self.browser_id][i+1]
+
+            # Get browser type
+            browser_type_id = int(self.parser.data['browser'][self.browser_id][0])
+            parsed_data['type'] = self.parser.data['browser_type'][browser_type_id][0]
+            self.browser_type = parsed_data["type"]
+            # Exception for ua_name: combine browser info.
+            # info is obtained in browser_reg search.
+            parsed_data['ua_name'] = "%s %s" % (self.parser.data['browser'][self.browser_id][1], self.browser_version_info)
+        return parsed_data
 
     def get_device_type(self):
         # Get device type
@@ -159,28 +182,10 @@ class UA:
 
         return parsed_data
 
-    def get_browser_details(self):
-        if self.browser_id == False:
-            self.is_valid_browser()
-
-        self.browser_type = None
-        parsed_data = {}
-        if self.parser.data['browser'].has_key(self.browser_id):
-            for i, keyname in enumerate(UAParser.BROWSER_INDEX):
-                parsed_data[keyname] = self.parser.data["browser"][self.browser_id][i+1]
-
-            # Get browser type
-            browser_type_id = int(self.parser.data['browser'][self.browser_id][0])
-            parsed_data['type'] = self.parser.data['browser_type'][browser_type_id][0]
-            self.browser_type = parsed_data["type"]
-            # Exception for ua_name: combine browser info.
-            # info is obtained in browser_reg search.
-            parsed_data['ua_name'] = "%s %s" % (self.parser.data['browser'][self.browser_id][1], self.info)
-        return parsed_data
-
     def get_os_details(self):
         if self.browser_id == False:
-            self.is_valid_browser()
+            if not self.is_valid_browser():
+                return {}
 
         parsed_data = {}
         # Get OS details. If browser information exists in browser_os,

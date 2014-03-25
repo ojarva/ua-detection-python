@@ -1,2 +1,6 @@
 syntax: glob
 *.pyc
+uaparser/cache*
+dist/*
+build/*
+*.egg-info

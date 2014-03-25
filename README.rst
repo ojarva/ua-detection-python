@@ -21,6 +21,30 @@ Usage:
   # Or alternatively,
   print ua.parse() # returns all parsed fields for the UA string
 
+Django integration
+------------------
+
+As running a large number of regexes takes a long time, Django integration uses caching.
+
+Usage:
+
+::
+
+  from uaparser.django.caching_ua_parser import parse_user_agent
+  parsed = parse_user_agent(request.META.get("HTTP_USER_AGENT"))
+
+``parse_user_agent`` fetches all user-agent fields (i.e it calls ``ua.parse()``).
+
+Settings:
+
+- ``UA_CACHE_DIRECTORY``: directory for data file ("cache.pickle"). Mandatory.
+- ``UA_CACHE_NAME``: defaults to "default". Defines custom Django cache name.
+- ``UA_CACHE_PREFIX``: defaults to "parse_ua". Key prefix for cache.
+- ``UA_CACHE_TIMEOUT``: defaults to 48 hours. Cache key timeout in seconds.
+
+Middleware: add ``uaparser.django.middleware.UAParserMiddleware`` to ``MIDDLEWARE_CLASSES``.
+
+Context processor: to add ``parsed_ua`` variable to context, add ``uaparser.django.context_processor.add_parsed_ua`` to ``CONTEXT_PROCESSORS``. This does nothing if ``UAParserMiddleware`` is not enabled.
 
 
 License

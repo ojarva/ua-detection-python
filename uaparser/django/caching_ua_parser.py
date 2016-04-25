@@ -21,6 +21,7 @@ except AttributeError:
 
 __all__ = ["parse_user_agent"]
 
+
 def parse_user_agent(ua):
     parsed = cache.get("%s-%s" % (CACHE_PREFIX, ua))
     if parsed:

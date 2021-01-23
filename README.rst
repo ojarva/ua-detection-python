@@ -1,6 +1,8 @@
 Browser user-agent detection
 ============================
 
+*As user-agent-string.info is nowadays a commercial service, this project is abandoned.
+
 This library parses browser user-agent strings with data from [user-agent-string.info](http://user-agent-string.info/).
 
 This library is loosely based on the work by Hicro Kee (hicrokee AT gmail DOT com) and Michal Molhanec (http://molhanec.net).
